@@ -1,0 +1,9 @@
+# ~/.config/mango/local.conf — bu makineye özel ayarlar (install.sh ilk kurulumda buraya kopyalar).
+# config.conf'tan sonra yüklenir, yani buradaki değerler onu ezer.
+
+# Monitörler: adları `wlr-randr` ya da `mmsg get monitors` ile bul
+# monitor_rule=name:^HDMI-A-1$,width:1920,height:1080,refresh:180.003,x:0,y:0
+
+# Klavye
+# xkb_rules_layout=us,tr
+# xkb_rules_options=grp:alt_shift_toggle

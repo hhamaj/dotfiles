@@ -1,0 +1,51 @@
+# mako — macOS bildirim tarzı (rofi/mangobar/foot ile aynı koyu tema)
+# Blur: mango'daki blur_layer=1 (layer namespace: "notifications")
+# Eski config: config.bak-macos
+
+sort=-time
+layer=overlay
+anchor=top-right
+
+font=Inter 11
+
+width=360
+height=160
+margin=12
+outer-margin=6,6,0,0
+padding=12,14
+border-size=1
+border-radius=14
+icons=1
+icon-path=/usr/local/share/icons/WhiteSur-dark:/usr/share/icons/Papirus-Dark:/usr/share/icons/hicolor
+max-icon-size=40
+icon-location=left
+markup=1
+actions=1
+# Başlık kalın, gövde soluk (macOS gibi)
+format=<b>%s</b>\n<span color="#aeaeb2">%b</span>
+text-alignment=left
+default-timeout=5000
+ignore-timeout=0
+max-visible=4
+max-history=20
+history=1
+
+background-color=#0d0d0eb8
+text-color=#f2f2f2
+border-color=#ffffff1a
+progress-color=over #ffffff26
+
+[urgency=low]
+default-timeout=3000
+
+[urgency=normal]
+default-timeout=5000
+
+# Kritik: kaybolmaz, macOS turuncusu ince kenarlık
+[urgency=critical]
+border-color=#ff9f0a
+default-timeout=0
+ignore-timeout=1
+
+[mode=do-not-disturb]
+invisible=1

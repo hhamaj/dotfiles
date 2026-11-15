@@ -1,0 +1,123 @@
+/* Thunar — rofi/yambar/foot ile aynı macOS dark tarzı
+   Sadece .thunar penceresini etkiler; diğer GTK uygulamaları Orchis'te kalır.
+   Blur: SwayFX'in genel "blur enable" ayarından gelir (saydam pencereler). */
+
+@define-color thunar_bg      rgba(13, 13, 14, 0.84);
+@define-color thunar_sidebar rgba(13, 13, 14, 0.65);
+@define-color thunar_line    rgba(255, 255, 255, 0.08);
+@define-color thunar_hover   rgba(255, 255, 255, 0.07);
+@define-color thunar_sel     rgba(255, 255, 255, 0.16);
+
+/* Pencere: tek saydam zemin, iç parçalar şeffaf */
+window.thunar,
+window.thunar decoration {
+  background-color: @thunar_bg;
+  border-radius: 0;
+}
+
+.thunar box,
+.thunar paned,
+.thunar scrolledwindow,
+.thunar viewport,
+.thunar notebook,
+.thunar notebook > stack,
+.thunar notebook > header,
+.thunar toolbar,
+.thunar menubar,
+.thunar statusbar,
+.thunar .view,
+.thunar treeview,
+.thunar iconview,
+.thunar treeview.view header button {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+
+.thunar {
+  color: #f2f2f2;
+}
+
+/* Kenar çubuğu (Finder gibi biraz daha saydam) */
+.thunar .sidebar,
+.thunar .sidebar .view,
+.thunar .shortcuts-pane,
+.thunar .shortcuts-pane .view {
+  background-color: @thunar_sidebar;
+  border-right: 1px solid @thunar_line;
+}
+
+.thunar .sidebar .view:selected,
+.thunar .shortcuts-pane .view:selected {
+  background-color: @thunar_sel;
+  color: #ffffff;
+  border-radius: 6px;
+}
+
+/* Dosya listesi */
+.thunar .view:hover,
+.thunar iconview:hover {
+  background-color: @thunar_hover;
+}
+
+.thunar .view:selected,
+.thunar .view:selected:focus,
+.thunar iconview:selected,
+.thunar iconview:selected:focus,
+.thunar .view text:selected {
+  background-color: @thunar_sel;
+  color: #ffffff;
+}
+
+.thunar .view.dim-label,
+.thunar treeview.view header button {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Araç çubuğu ve konum çubuğu */
+.thunar toolbar {
+  padding: 6px 8px;
+  border-bottom: 1px solid @thunar_line;
+}
+
+.thunar toolbar button,
+.thunar toolbar button.flat {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #f2f2f2;
+}
+
+.thunar toolbar button:hover {
+  background-color: @thunar_hover;
+}
+
+.thunar toolbar button:checked,
+.thunar toolbar button:active {
+  background-color: @thunar_sel;
+}
+
+.thunar entry {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid @thunar_line;
+  border-radius: 8px;
+  color: #f2f2f2;
+  box-shadow: none;
+}
+
+.thunar entry:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Durum çubuğu */
+.thunar statusbar {
+  border-top: 1px solid @thunar_line;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Bölme çizgileri */
+.thunar paned > separator {
+  background-color: @thunar_line;
+  background-image: none;
+  min-width: 1px;
+}

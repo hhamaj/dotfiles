@@ -1,0 +1,10 @@
+#!/bin/sh
+# foot penceresi için tmux: arka planda bırakılmış (bağlı olmayan) en eski
+# oturuma bağlan, yoksa yeni bir tN oturumu aç.
+s=$(tmux ls -F '#{session_attached} #{session_created} #{session_name}' 2>/dev/null \
+    | awk '$1 == 0 && $3 ~ /^t[0-9]+$/' | sort -k2n | head -n1 | cut -d' ' -f3)
+[ -n "$s" ] && exec tmux attach -t "=$s"
+
+n=1
+while tmux has-session -t "=t$n" 2>/dev/null; do n=$((n + 1)); done
+exec tmux new-session -s "t$n"

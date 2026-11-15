@@ -1,0 +1,37 @@
+#!/bin/sh
+# Mango SUPER+Q: odaktaki pencereyi kapat. foot+tmux penceresinde kabuk dışında
+# çalışan bir program varsa önce rofi ile sor.
+c=$(mmsg get focusing-client) || exit 0
+eval "$(printf '%s' "$c" | python3 -I -c '
+import json, shlex, sys
+d = json.load(sys.stdin)
+for k in ("id", "appid", "title"):
+    print("%s=%s" % (k, shlex.quote(str(d.get(k, "")))))
+')"
+
+kapat() { mmsg dispatch killclient client,"$id"; }
+
+oturum=$(printf '%s' "$title" | sed -nE 's/^(t[0-9]+) │ .*/\1/p')
+case "$appid" in foot|footclient) ;; *) appid=; esac
+if [ -z "$appid" ] || [ -z "$oturum" ] || ! tmux has-session -t "=$oturum" 2>/dev/null; then
+    kapat
+    exit 0
+fi
+
+mesgul=$(tmux list-panes -s -t "=$oturum" -F '#{pane_current_command}' \
+    | grep -vxE 'fish|bash|zsh|sh|dash|tmux' | sort -u | paste -sd ' ')
+
+# Boşta kabuktan başka bir şey yok: oturumu da kapat, birikmesin.
+if [ -z "$mesgul" ]; then
+    tmux kill-session -t "=$oturum"
+    exit 0
+fi
+
+secim=$(printf '%s\n' "Arka planda bırak" "Hepsini sonlandır" "İptal" \
+    | rofi -dmenu -i -no-custom -p "" -mesg "Çalışıyor: $mesgul" -no-show-icons \
+        -theme-str 'window { width: 360px; } listview { lines: 3; } entry { placeholder: "Terminal kapatılsın mı?"; }') || exit 0
+
+case "$secim" in
+    "Arka planda bırak") kapat ;;                       # tmux oturumu yaşar; yeni terminal ona bağlanır
+    "Hepsini sonlandır") tmux kill-session -t "=$oturum" ;;
+esac

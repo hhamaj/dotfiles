@@ -1,0 +1,38 @@
+#!/bin/sh
+# Odaktaki pencerenin sürecini zorla öldür (mango; sway de çalışır)
+# jq yerine python3: yeni kurulumda jq yok.
+odak() {
+    python3 -I -c '
+import json, sys
+d = json.load(sys.stdin)
+if "nodes" in d:  # sway ağacı
+    def bul(n):
+        if n.get("focused"):
+            return n
+        for c in n.get("nodes", []) + n.get("floating_nodes", []):
+            r = bul(c)
+            if r:
+                return r
+    d = bul(d) or {}
+print(d.get("pid") or "", d.get("appid") or d.get("app_id") or "", d.get("id") or "")
+'
+}
+
+if [ -n "$MANGO_INSTANCE_SIGNATURE" ]; then
+    set -- $(mmsg get focusing-client | odak)
+else
+    set -- $(swaymsg -t get_tree | odak)
+fi
+pid=$1 appid=$2 id=$3
+
+# footclient pencerelerinin pid'si ortak `foot --server`: onu öldürmek bütün
+# terminalleri kapatır. Yalnızca o pencereyi ve içindeki tmux oturumunu kapat.
+if [ "$appid" = footclient ] && [ -n "$MANGO_INSTANCE_SIGNATURE" ]; then
+    oturum=$(mmsg get focusing-client | python3 -I -c 'import json,sys; print(json.load(sys.stdin).get("title",""))' \
+        | sed -nE 's/^(t[0-9]+) │ .*/\1/p')
+    [ -n "$oturum" ] && tmux kill-session -t "=$oturum" 2>/dev/null
+    mmsg dispatch killclient client,"$id"
+    exit 0
+fi
+
+[ -n "$pid" ] && kill -9 "$pid"

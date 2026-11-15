@@ -1,0 +1,91 @@
+# Starship — rofi/yambar/foot/nvim ile aynı macOS dark, monokrom tarz
+# Sol : klasör · git dalı/durumu · nix shell · ❯ (hata varsa kırmızı)
+# Sağ : komut süresi · saat (soluk)
+
+"$schema" = "https://starship.rs/config-schema.json"
+
+add_newline = true
+command_timeout = 800
+
+format = """
+$directory\
+$git_branch\
+$git_state\
+$git_status\
+$nix_shell\
+$character"""
+
+right_format = """
+$cmd_duration\
+$jobs\
+$time"""
+
+palette = "macos"
+
+[palettes.macos]
+fg      = "#f2f2f2"
+dim     = "#8e8e93"
+faint   = "#636366"
+red     = "#ff453a"
+orange  = "#ff9f0a"
+
+[directory]
+style = "bold fg"
+read_only = " 󰌾"
+read_only_style = "dim"
+truncation_length = 3
+truncation_symbol = "…/"
+truncate_to_repo = true
+home_symbol = "~"
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+symbol = " "
+style = "dim"
+format = "[$symbol$branch(:$remote_branch)]($style) "
+
+[git_state]
+style = "orange"
+format = '[\($state( $progress_current/$progress_total)\)]($style) '
+
+[git_status]
+style = "dim"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?"
+stashed = "≡"
+modified = "!"
+staged = "+"
+renamed = "»"
+deleted = "✘"
+
+[nix_shell]
+symbol = " "
+style = "dim"
+impure_msg = ""
+pure_msg = "pure"
+format = "[$symbol$state( $name)]($style) "
+
+[character]
+success_symbol = "[❯](bold fg)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold fg)"
+
+[cmd_duration]
+min_time = 2000
+style = "faint"
+format = "[ $duration]($style) "
+
+[jobs]
+symbol = "✦"
+style = "dim"
+format = "[$symbol$number]($style) "
+
+[time]
+disabled = false
+time_format = "%H:%M"
+style = "faint"
+format = "[$time]($style)"
