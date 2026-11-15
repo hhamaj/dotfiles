@@ -82,6 +82,7 @@ declare -a group_names=()
 declare -A group_desc=() group_pkgs=()
 load_groups() {
 	local line g=
+	group_names=() group_desc=() group_pkgs=()
 	while IFS= read -r line; do
 		line=${line%%#*}
 		[[ $line =~ ^[[:space:]]*$ ]] && continue
@@ -105,7 +106,7 @@ installed() {
 }
 
 ask() { # ask PROMPT DEFAULT -> reply in $REPLY
-	read -r -p "$1" REPLY </dev/tty || REPLY=
+	read -r -p "$1" REPLY || REPLY=
 	REPLY=${REPLY:-$2}
 }
 
@@ -123,7 +124,7 @@ choose_packages() {
 		done
 		return
 	fi
-	if [[ ! -t 0 && ! -r /dev/tty ]]; then
+	if [[ ! -t 0 ]]; then
 		for g in "${group_names[@]}"; do selected+=(${group_pkgs[$g]}); done
 		return
 	fi
@@ -193,11 +194,44 @@ install_fonts() {
 	((dry)) || fc-cache -f "$HOME/.local/share/fonts"
 }
 
+# Sets $missing to the tools/libraries ada needs that aren't there.
+have_build_deps() {
+	local t
+	missing=()
+	for t in meson ninja pkg-config; do command -v "$t" >/dev/null || missing+=("$t"); done
+	if command -v pkg-config >/dev/null; then
+		for t in wayland-client wayland-protocols wayland-scanner cairo pangocairo json-c libpulse gdk-pixbuf-2.0; do
+			pkg-config --exists "$t" || missing+=("$t")
+		done
+		pkg-config --exists libelogind || pkg-config --exists libsystemd || missing+=("libelogind/libsystemd")
+	fi
+	((${#missing[@]} == 0))
+}
+
 build_ada() {
 	say "Building ada"
 	if [[ ! -f $repo/ada/meson.build ]]; then
 		run git -C "$repo" submodule update --init ada
 	fi
+
+	# Build tools and libraries come from the "build" package group.
+	if ! have_build_deps; then
+		echo "    ada's build dependencies are missing: ${missing[*]}"
+		REPLY=n
+		if [[ -f $repo/packages/$os.txt && -t 0 ]] && ! ((dry)); then
+			ask "    Install the build package group now? [Y/n] " y
+		fi
+		if [[ ${REPLY,,} == y* ]]; then
+			groups=build
+			install_deps
+			hash -r
+			have_build_deps || { echo "    still missing: ${missing[*]}" >&2; return 1; }
+		else
+			echo "    skipped: run ./install.sh --groups=build to build ada later"
+			return 0
+		fi
+	fi
+
 	if [[ -d $repo/ada/build ]]; then
 		run meson setup --reconfigure "$repo/ada/build" "$repo/ada" -Dprefix="$HOME/.local"
 	else
