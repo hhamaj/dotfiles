@@ -45,7 +45,7 @@ tty1: mango starts by itself. Or run `mango` from a tty.
 layout and anything else machine-specific there:
 
 ```
-monitor_rule=name:^HDMI-A-1$,width:1920,height:1080,refresh:180.003,x:0,y:0
+monitor_rule=name:^DP-1$,width:1920,height:1080,refresh:60,x:0,y:0
 ```
 
 The wallpaper is the `~/.config/mango/wallpaper` symlink, set with
