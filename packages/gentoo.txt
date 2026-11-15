@@ -1,14 +1,14 @@
-# emerge --ask --noreplace $(grep -v '^#' packages/gentoo.txt)
+# Package groups for ./install.sh --deps. "[name] description" starts a group.
 # Needs the GURU overlay (mangowm, cliphist, brightnessctl, inter):
 #   eselect repository enable guru && emaint sync -r guru
 
-# ada build
+[build] build ada
 dev-libs/wayland dev-libs/wayland-protocols dev-util/wayland-scanner
 x11-libs/cairo x11-libs/pango x11-libs/gdk-pixbuf gnome-base/librsvg
 dev-libs/json-c sys-auth/elogind media-libs/libpulse
 dev-build/meson app-alternatives/ninja dev-vcs/git
 
-# session
+[session] mango, terminal, launcher, lock, clipboard, screenshots
 gui-wm/mangowm
 gui-apps/foot app-misc/tmux app-shells/fish app-shells/starship app-misc/fastfetch x11-misc/rofi
 gui-apps/swaybg gui-apps/swayidle gui-apps/swaylock gui-apps/grim gui-apps/slurp
@@ -16,8 +16,8 @@ gui-apps/wl-clipboard app-misc/cliphist app-misc/brightnessctl
 gui-libs/xdg-desktop-portal-wlr sys-apps/xdg-desktop-portal-gtk x11-misc/xdg-utils
 dev-python/pillow media-gfx/imagemagick
 
-# apps
+[apps] file manager, editor, monitors, RSS
 xfce-base/thunar app-editors/neovim sys-process/btop media-sound/cava net-news/newsboat
 
-# look
+[look] Qt theming, icons, fonts
 x11-themes/kvantum gui-apps/qt6ct x11-themes/papirus-icon-theme media-fonts/inter

@@ -1,18 +1,19 @@
-# pacman -S --needed $(grep -v '^#' packages/arch.txt)
-# MangoWC comes from the AUR: mangowm-git (install.sh --deps uses paru or yay if present)
+# Package groups for ./install.sh --deps. "[name] description" starts a group;
+# aur:<pkg> is installed with paru or yay.
 
-# ada build
+[build] build ada
 wayland wayland-protocols cairo pango gdk-pixbuf2 librsvg json-c systemd-libs libpulse
 meson ninja pkgconf git
 
-# session
+[session] mango, terminal, launcher, lock, clipboard, screenshots
+aur:mangowm-git
 foot tmux fish starship fastfetch rofi
 swaybg swayidle swaylock grim slurp wl-clipboard cliphist brightnessctl
 xdg-desktop-portal-wlr xdg-desktop-portal-gtk xdg-utils libnotify
 python-pillow imagemagick
 
-# apps
+[apps] file manager, editor, monitors, RSS
 thunar neovim btop cava newsboat
 
-# look
+[look] Qt theming, icons, fonts
 kvantum qt6ct papirus-icon-theme inter-font ttf-meslo-nerd ttf-geist-mono-nerd

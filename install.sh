@@ -2,7 +2,11 @@
 # Links these dotfiles into $HOME and builds ada.
 #
 #   ./install.sh            link configs + scripts, build and install ada
-#   ./install.sh --deps     also install packages (Arch or Gentoo)
+#   ./install.sh --deps     also install packages (Arch or Gentoo); asks which
+#                           groups, or which packages in a group, to install
+#   ./install.sh --groups=build,session
+#                           install those package groups without asking
+#                           (all = every group; list them with --list-groups)
 #   ./install.sh --fonts    also download MesloLGS + GeistMono Nerd Fonts
 #   ./install.sh --no-ada   skip building ada
 #   ./install.sh --dry-run  show what would happen
@@ -17,15 +21,17 @@ repo=$(cd "$(dirname "$0")" && pwd)
 cfg=${XDG_CONFIG_HOME:-$HOME/.config}
 bin=$HOME/.local/bin
 stamp=$(date +%Y%m%d-%H%M%S)
-deps=0 fonts=0 ada=1 dry=0
+deps=0 fonts=0 ada=1 dry=0 groups=
 
 for a in "$@"; do
 	case $a in
 	--deps) deps=1 ;;
+	--groups=*) deps=1 groups=${a#--groups=} ;;
+	--list-groups) list_groups=1 ;;
 	--fonts) fonts=1 ;;
 	--no-ada) ada=0 ;;
 	--dry-run) dry=1 ;;
-	-h | --help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+	-h | --help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 	*) echo "unknown option: $a" >&2; exit 2 ;;
 	esac
 done
@@ -61,27 +67,113 @@ render() {
 	if ((dry)); then rm -f "$tmp"; echo "    render $dst"; else mv "$tmp" "$dst"; echo "    $dst (rendered)"; fi
 }
 
-install_deps() {
+distro() {
 	. /etc/os-release
 	case " ${ID:-} ${ID_LIKE:-} " in
-	*" arch "*)
-		say "Installing packages (pacman)"
-		# shellcheck disable=SC2046
-		run sudo pacman -S --needed $(grep -v '^#' "$repo/packages/arch.txt")
-		if ! command -v mango >/dev/null; then
-			if command -v paru >/dev/null; then run paru -S --needed mangowm-git
-			elif command -v yay >/dev/null; then run yay -S --needed mangowm-git
-			else echo "    MangoWC: install mangowm-git from the AUR"; fi
+	*" arch "*) echo arch ;;
+	*" gentoo "*) echo gentoo ;;
+	*) echo "${ID:-unknown}" ;;
+	esac
+}
+
+# Reads packages/<distro>.txt into: group_names (in order), group_desc[name],
+# group_pkgs[name] (space separated).
+declare -a group_names=()
+declare -A group_desc=() group_pkgs=()
+load_groups() {
+	local line g=
+	while IFS= read -r line; do
+		line=${line%%#*}
+		[[ $line =~ ^[[:space:]]*$ ]] && continue
+		if [[ $line =~ ^\[([a-z0-9_-]+)\][[:space:]]*(.*)$ ]]; then
+			g=${BASH_REMATCH[1]}
+			group_names+=("$g")
+			group_desc[$g]=${BASH_REMATCH[2]}
+			group_pkgs[$g]=
+		elif [[ -n $g ]]; then
+			group_pkgs[$g]+=" $line"
+		fi
+	done <"$1"
+}
+
+installed() {
+	local p=${1#aur:}
+	case $os in
+	arch) pacman -Q "$p" &>/dev/null ;;
+	gentoo) compgen -G "/var/db/pkg/$p-[0-9]*" >/dev/null ;;
+	esac
+}
+
+ask() { # ask PROMPT DEFAULT -> reply in $REPLY
+	read -r -p "$1" REPLY </dev/tty || REPLY=
+	REPLY=${REPLY:-$2}
+}
+
+# Fills $selected with the packages to install.
+choose_packages() {
+	local g p n
+	selected=()
+	if [[ -n $groups ]]; then
+		[[ $groups == all ]] && groups=$(IFS=,; echo "${group_names[*]}")
+		IFS=, read -ra want <<<"$groups"
+		for g in "${want[@]}"; do
+			[[ -v group_pkgs[$g] ]] || { echo "unknown group: $g (have: ${group_names[*]})" >&2; exit 2; }
+			# shellcheck disable=SC2206
+			selected+=(${group_pkgs[$g]})
+		done
+		return
+	fi
+	if [[ ! -t 0 && ! -r /dev/tty ]]; then
+		for g in "${group_names[@]}"; do selected+=(${group_pkgs[$g]}); done
+		return
+	fi
+	echo "    y = whole group, n = skip, p = pick packages one by one"
+	for g in "${group_names[@]}"; do
+		# shellcheck disable=SC2206
+		local pkgs=(${group_pkgs[$g]})
+		n=0
+		for p in "${pkgs[@]}"; do installed "$p" && n=$((n + 1)); done
+		ask "    [$g] ${group_desc[$g]} (${#pkgs[@]} packages, $n installed) [Y/n/p] " y
+		case ${REPLY,,} in
+		n*) ;;
+		p*)
+			for p in "${pkgs[@]}"; do
+				if installed "$p"; then
+					ask "        $p (installed) [y/N] " n
+				else
+					ask "        $p [Y/n] " y
+				fi
+				[[ ${REPLY,,} == y* ]] && selected+=("$p")
+			done
+			;;
+		*) selected+=("${pkgs[@]}") ;;
+		esac
+	done
+}
+
+install_deps() {
+	local list=$repo/packages/$os.txt p
+	[[ -f $list ]] || { say "No package list for $os: install the packages in packages/ by hand"; return; }
+	load_groups "$list"
+	say "Choosing packages ($os)"
+	choose_packages
+	((${#selected[@]})) || { echo "    nothing selected"; return; }
+
+	local repo_pkgs=() aur_pkgs=()
+	for p in "${selected[@]}"; do
+		case $p in aur:*) aur_pkgs+=("${p#aur:}") ;; *) repo_pkgs+=("$p") ;; esac
+	done
+	say "Installing ${#selected[@]} packages"
+	case $os in
+	arch)
+		((${#repo_pkgs[@]})) && run sudo pacman -S --needed "${repo_pkgs[@]}"
+		if ((${#aur_pkgs[@]})); then
+			if command -v paru >/dev/null; then run paru -S --needed "${aur_pkgs[@]}"
+			elif command -v yay >/dev/null; then run yay -S --needed "${aur_pkgs[@]}"
+			else echo "    no AUR helper: install ${aur_pkgs[*]} from the AUR by hand"; fi
 		fi
 		;;
-	*" gentoo "*)
-		say "Installing packages (emerge)"
-		# shellcheck disable=SC2046
-		run sudo emerge --ask --noreplace $(grep -v '^#' "$repo/packages/gentoo.txt")
-		;;
-	*)
-		say "Unknown distro (${ID:-?}): install the packages in packages/ by hand"
-		;;
+	gentoo) run sudo emerge --ask --noreplace "${repo_pkgs[@]}" ;;
 	esac
 }
 
@@ -113,6 +205,17 @@ build_ada() {
 	fi
 	run ninja -C "$repo/ada/build" install
 }
+
+os=$(distro)
+if [[ -n ${list_groups:-} ]]; then
+	[[ -f $repo/packages/$os.txt ]] || { echo "no package list for $os" >&2; exit 1; }
+	load_groups "$repo/packages/$os.txt"
+	for g in "${group_names[@]}"; do
+		printf '%-10s %s\n' "$g" "${group_desc[$g]}"
+		printf '           %s\n' "${group_pkgs[$g]# }"
+	done
+	exit 0
+fi
 
 ((deps)) && install_deps
 ((fonts)) && install_fonts

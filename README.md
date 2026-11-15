@@ -18,10 +18,17 @@ cd ~/dotfiles
 | Flag | Does |
 |---|---|
 | (none) | link configs and scripts, build and install ada to `~/.local` |
-| `--deps` | install `packages/arch.txt` (+ `mangowm-git` from the AUR via paru/yay) or `packages/gentoo.txt` (needs GURU) |
+| `--deps` | install packages; asks group by group (`y` whole group, `n` skip, `p` pick packages one by one, already installed ones marked) |
+| `--groups=build,session` | install those groups without asking (`all` for every group) |
+| `--list-groups` | show the groups and their packages for this distro |
 | `--fonts` | download MesloLGS and GeistMono Nerd Fonts to `~/.local/share/fonts` |
 | `--no-ada` | skip building ada |
 | `--dry-run` | print what would happen |
+
+Package groups live in `packages/arch.txt` and `packages/gentoo.txt`
+(`build`, `session`, `apps`, `look`); add a `[name] description` line to make
+a new one. On Arch, `aur:<pkg>` entries (mangowm-git) go through paru or yay.
+Gentoo needs the GURU overlay.
 
 Each file is symlinked on its own, so editing `~/.config/foot/foot.ini`
 edits the repo. Anything already in place is moved to
