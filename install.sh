@@ -277,6 +277,6 @@ fi
 
 say "Done"
 command -v mango >/dev/null || echo "    mango is not installed yet (--deps, or see README)"
-fc-list | grep -q 'MesloLGS Nerd Font' || echo "    MesloLGS Nerd Font missing: ada's icons will be boxes (--fonts)"
+[[ -n $(fc-list 'MesloLGS Nerd Font Mono' family) ]] || echo "    MesloLGS Nerd Font missing: ada's icons will be boxes (--fonts)"
 command -v cliphist >/dev/null || echo "    cliphist missing: clipboard history (SUPER+Shift+v) won't work"
 echo "    Log in on tty1 with fish as your shell and mango starts, or run: mango"
