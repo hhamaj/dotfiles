@@ -86,7 +86,7 @@ load_groups() {
 	while IFS= read -r line; do
 		line=${line%%#*}
 		[[ $line =~ ^[[:space:]]*$ ]] && continue
-		if [[ $line =~ ^\[([a-z0-9_-]+)\][[:space:]]*(.*)$ ]]; then
+		if [[ $line =~ ^\[([[:alnum:]_-]+)\][[:space:]]*(.*)$ ]]; then
 			g=${BASH_REMATCH[1]}
 			group_names+=("$g")
 			group_desc[$g]=${BASH_REMATCH[2]}
