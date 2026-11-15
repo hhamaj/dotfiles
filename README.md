@@ -27,7 +27,8 @@ cd ~/dotfiles
 
 Package groups live in `packages/arch.txt` and `packages/gentoo.txt`
 (`build`, `session`, `apps`, `look`); add a `[name] description` line to make
-a new one. On Arch, `aur:<pkg>` entries (mangowm-git) go through paru or yay.
+a new one. On Arch everything comes from the official repos; `aur:<pkg>` entries, if you
+add any, go through paru or yay.
 Gentoo needs the GURU overlay.
 
 Each file is symlinked on its own, so editing `~/.config/foot/foot.ini`
