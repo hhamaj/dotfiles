@@ -77,10 +77,10 @@ packages/   package lists per distro
 | Key | |
 |---|---|
 | SUPER+Return | terminal |
-| SUPER+d | launcher (inside ada) |
+| Alt+Space / SUPER+d | launcher (inside ada) |
 | SUPER+Shift+v | clipboard history |
 | SUPER+Shift+w | wallpaper |
-| SUPER+Shift+s / Print | screenshot region to clipboard / full to `~/Pictures/Screenshots` |
+| Print / Shift+Print | screenshot of a selected area / the whole screen, copied to the clipboard and saved to `~/Pictures/Screenshots` |
 | SUPER+q / SUPER+Shift+q | close / force kill |
 | SUPER+Ctrl+q | lock |
 | SUPER+Shift+e | quit mango |
